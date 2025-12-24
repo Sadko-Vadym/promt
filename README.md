@@ -1,20 +1,3 @@
-# Kubernetes Manifest Engineering Portfolio
-
-This repository demonstrates advanced DevOps skills in Kubernetes infrastructure automation through prompt engineering. It contains professionally crafted YAML manifests and the prompts used to generate them, showcasing expertise in containerized application deployment and management.
-
-## 🎯 Project Overview
-
-This portfolio was created to demonstrate proficiency in:
-- Kubernetes resource orchestration
-- Infrastructure as Code (IaC) best practices
-- Prompt engineering for DevOps automation
-- Production-ready deployment configurations
-- Cloud-native application architecture
-
-## 📋 Manifest Portfolio
-
-Below is a comprehensive table of all Kubernetes manifests with their corresponding prompts, descriptions, and direct links to examples.
-
 | NAME | PROMPT | DESCRIPTION | EXAMPLE |
 |------|--------|-------------|---------|
 | **app.yaml** | Create a production-ready Kubernetes Deployment manifest for a Go web application named 'go-demo-app' that exposes port 8080. Include: 3 replicas for high availability, proper labels following Kubernetes best practices (app, version, managed-by), a ClusterIP Service to expose the application internally on port 80, and use the container image from ghcr.io/den-vasyliev/go-demo-app:latest. Ensure the manifest includes metadata labels for service discovery and follows the apps/v1 API version. | Basic production deployment with service discovery, load balancing across 3 replicas, and internal service exposure | [app.yaml](yaml/app.yaml) |
@@ -176,4 +159,5 @@ This portfolio was created as part of a contractor application for a marketing a
 ```
 
 **Last Updated:** December 24, 2025
+
 

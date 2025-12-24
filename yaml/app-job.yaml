@@ -75,3 +75,4 @@ type: Opaque
 stringData:
   database-url: "postgresql://user:password@postgres-service:5432/demodb"
 
+
