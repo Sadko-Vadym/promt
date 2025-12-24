@@ -42,8 +42,7 @@ spec:
         persistentVolumeClaim:
           claimName: go-demo-app-pvc
       - name: cache-volume
-        emptyDir:
-          sizeLimit: 1Gi
+    emptyDir: {}
 ---
 apiVersion: v1
 kind: ConfigMap
