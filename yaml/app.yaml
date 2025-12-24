@@ -1,45 +1,15 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: go-demo-app
+  name: app
   labels:
-    app: go-demo-app
-    version: v1.0.0
-    managed-by: kubectl
+    app: demo
+    run: demo
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: go-demo-app
-  template:
-    metadata:
-      labels:
-        app: go-demo-app
-        version: v1.0.0
-    spec:
-      containers:
-      - name: go-demo-app
-        image: ghcr.io/den-vasyliev/go-demo-app:latest
-        ports:
+  containers:
+    - image: ghcr.io/den-vasyliev/go-demo-app:latest
+      name: app
+      ports:
         - containerPort: 8080
           name: http
-          protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-demo-app-service
-  labels:
-    app: go-demo-app
-spec:
-  type: ClusterIP
-  selector:
-    app: go-demo-app
-  ports:
-  - port: 80
-    targetPort: 8080
-    protocol: TCP
-    name: http
-
-

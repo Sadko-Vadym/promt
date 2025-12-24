@@ -1,84 +1,15 @@
----
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: go-demo-app-backup
-  labels:
-    app: go-demo-app
-    component: backup
+  name: app-cronjob
 spec:
-  schedule: "0 2 * * *"
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 1
-  startingDeadlineSeconds: 300
+  schedule: "*/5 * * * *"
   jobTemplate:
-    metadata:
-      labels:
-        app: go-demo-app
-        component: backup
     spec:
-      backoffLimit: 3
-      activeDeadlineSeconds: 600
       template:
-        metadata:
-          labels:
-            app: go-demo-app
-            component: backup
         spec:
-          restartPolicy: OnFailure
           containers:
-          - name: backup
-            image: ghcr.io/den-vasyliev/go-demo-app:latest
-            command:
-            - /bin/sh
-            - -c
-            - |
-              echo "Starting backup process at $(date)"
-              # Backup application data
-              tar -czf /backup/app-data-$(date +%Y%m%d-%H%M%S).tar.gz /app/data
-              # Clean old backups (keep last 7 days)
-              find /backup -name "app-data-*.tar.gz" -mtime +7 -delete
-              echo "Backup completed successfully at $(date)"
-            env:
-            - name: BACKUP_RETENTION_DAYS
-              value: "7"
-            - name: BACKUP_PATH
-              value: "/backup"
-            volumeMounts:
-            - name: backup-storage
-              mountPath: /backup
-            - name: app-data
-              mountPath: /app/data
-              readOnly: true
-            resources:
-              requests:
-                cpu: 100m
-                memory: 128Mi
-              limits:
-                cpu: 500m
-                memory: 512Mi
-          volumes:
-          - name: backup-storage
-            persistentVolumeClaim:
-              claimName: backup-pvc
-          - name: app-data
-            persistentVolumeClaim:
-              claimName: go-demo-app-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: backup-pvc
-  labels:
-    app: go-demo-app
-    component: backup
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
-  storageClassName: standard
-
-
+            - name: hello
+              image: bash
+              command: ["echo", "Hello world"]
+          restartPolicy: OnFailure

@@ -1,172 +1,27 @@
----
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: go-demo-app
+  name: app-two-containers
   labels:
-    app: go-demo-app
-    version: v1.0.0
+    app: demo
 spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: go-demo-app
-  template:
-    metadata:
-      labels:
-        app: go-demo-app
-        version: v1.0.0
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9090"
-        prometheus.io/path: "/metrics"
-    spec:
-      initContainers:
-      - name: init-config
-        image: busybox:1.36
-        command:
-        - sh
-        - -c
-        - |
-          echo "Initializing configuration..."
-          cp /config-template/* /config/
-          echo "Configuration initialized successfully"
-        volumeMounts:
-        - name: config-template
-          mountPath: /config-template
-        - name: shared-config
-          mountPath: /config
-      containers:
-      - name: go-demo-app
-        image: ghcr.io/den-vasyliev/go-demo-app:latest
-        ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-        volumeMounts:
-        - name: shared-config
-          mountPath: /app/config
-          readOnly: true
-        - name: shared-data
-          mountPath: /app/data
-        env:
-        - name: LOG_LEVEL
-          value: "info"
-        - name: ENVIRONMENT
-          value: "production"
-        resources:
-          requests:
-            cpu: 200m
-            memory: 256Mi
-          limits:
-            cpu: 1000m
-            memory: 512Mi
-      - name: log-aggregator
-        image: fluent/fluent-bit:2.2
-        ports:
-        - containerPort: 24224
-          name: fluentd
-          protocol: TCP
-        volumeMounts:
-        - name: shared-data
-          mountPath: /app/data
-          readOnly: true
-        - name: fluentbit-config
-          mountPath: /fluent-bit/etc/
-        env:
-        - name: FLUENT_ELASTICSEARCH_HOST
-          value: "elasticsearch-service"
-        - name: FLUENT_ELASTICSEARCH_PORT
-          value: "9200"
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 128Mi
-      - name: metrics-exporter
-        image: prom/statsd-exporter:v0.26.0
-        ports:
-        - containerPort: 9090
-          name: metrics
-          protocol: TCP
-        - containerPort: 9125
-          name: statsd
-          protocol: UDP
-        args:
-        - --web.listen-address=:9090
-        - --web.telemetry-path=/metrics
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-          limits:
-            cpu: 200m
-            memory: 128Mi
-      volumes:
-      - name: config-template
-        configMap:
-          name: go-demo-app-config-template
-      - name: shared-config
-        emptyDir: {}
-      - name: shared-data
-        emptyDir: {}
-      - name: fluentbit-config
-        configMap:
-          name: fluentbit-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: go-demo-app-config-template
-  labels:
-    app: go-demo-app
-data:
-  app.conf: |
-    server.port=8080
-    app.environment=production
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: fluentbit-config
-  labels:
-    app: go-demo-app
-data:
-  fluent-bit.conf: |
-    [SERVICE]
-        Flush        5
-        Daemon       Off
-        Log_Level    info
-    
-    [INPUT]
-        Name         tail
-        Path         /app/data/*.log
-        Tag          app.logs
-    
-    [OUTPUT]
-        Name         stdout
-        Match        *
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: go-demo-app-service
-  labels:
-    app: go-demo-app
-spec:
-  type: ClusterIP
-  selector:
-    app: go-demo-app
-  ports:
-  - port: 80
-    targetPort: 8080
-    protocol: TCP
-    name: http
-  - port: 9090
-    targetPort: 9090
-    protocol: TCP
-    name: metrics
-
-
+  volumes:
+    - name: html
+      emptyDir: {}
+  containers:
+    - name: 1st
+      image: nginx
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+    - name: 2nd
+      image: debian
+      volumeMounts:
+        - name: html
+          mountPath: /html
+      command: ["/bin/sh", "-c"]
+      args:
+        - while true; do
+            date >> /html/index.html;
+            sleep 1;
+          done
