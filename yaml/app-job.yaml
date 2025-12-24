@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: go-demo-app-migration
+  labels:
+    app: go-demo-app
+    component: migration
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 86400
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: go-demo-app
+        component: migration
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: migration
+        image: ghcr.io/den-vasyliev/go-demo-app:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Starting database migration at $(date)"
+          # Run database migrations
+          echo "Checking database connection..."
+          echo "Running migration scripts..."
+          echo "Migration 001: Creating initial schema..."
+          echo "Migration 002: Adding indexes..."
+          echo "Migration 003: Updating constraints..."
+          echo "Database migration completed successfully at $(date)"
+          exit 0
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: go-demo-app-secret
+              key: database-url
+        - name: MIGRATION_VERSION
+          value: "v1.0.0"
+        - name: ENVIRONMENT
+          value: "production"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.36
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for database to be ready..."
+          until nc -z postgres-service 5432; do
+            echo "Database not ready, waiting..."
+            sleep 2
+          done
+          echo "Database is ready!"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: go-demo-app-secret
+  labels:
+    app: go-demo-app
+type: Opaque
+stringData:
+  database-url: "postgresql://user:password@postgres-service:5432/demodb"
+

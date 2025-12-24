@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-demo-app
+  labels:
+    app: go-demo-app
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: go-demo-app
+  template:
+    metadata:
+      labels:
+        app: go-demo-app
+        version: v1.0.0
+    spec:
+      containers:
+      - name: go-demo-app
+        image: ghcr.io/den-vasyliev/go-demo-app:latest
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - name: app-config
+          mountPath: /app/config
+          readOnly: true
+        - name: app-data
+          mountPath: /app/data
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: app-config
+        configMap:
+          name: go-demo-app-config
+          items:
+          - key: app.conf
+            path: app.conf
+      - name: app-data
+        persistentVolumeClaim:
+          claimName: go-demo-app-pvc
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-demo-app-config
+  labels:
+    app: go-demo-app
+data:
+  app.conf: |
+    server.port=8080
+    app.environment=production
+    app.debug=false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: go-demo-app-pvc
+  labels:
+    app: go-demo-app
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-demo-app-service
+  labels:
+    app: go-demo-app
+spec:
+  type: ClusterIP
+  selector:
+    app: go-demo-app
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+
